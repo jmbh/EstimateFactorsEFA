@@ -52,3 +52,9 @@ loaded via a namespace (and not attached):
 [1] codetools_0.2-16 lattice_0.20-41  grid_4.0.2       nlme_3.1-147    
 [5] stats4_4.0.2     pbivnorm_0.6.0   tools_4.0.2      compiler_4.0.2  
 [9] mnormt_1.5-6    
+
+
+### Package Version of EGAnet
+
+We followed the author's advice and used the latest version of their package from Github. We added the source of that version in this reproducibility archive (EGAnet.zip)
+
