@@ -63,7 +63,6 @@ for(i in 1:20) {
 
   a_acc_batch <- apply(a_indcorrect[(batch_end[i]+1):batch_end[i+1], , , , , ], 2:6, mean)
   marg_acc <- apply(a_acc_batch, 5, function(x) mean(x, na.rm = TRUE))
-  ord <- order(marg_acc, decreasing = TRUE)
   names(marg_acc) <- labels
   m_batchresults[i, ] <- round(marg_acc[ord], 3)
 
