@@ -22,7 +22,7 @@ The output of the simulation study is in the folder /output. In principle the si
 - `Tutorial.R` contains the code of the tutorial in Appendix A and creates the figure in that appendix
 
 
-## sessionInfo()
+### sessionInfo()
 
 R version 4.0.2 (2020-06-22)
 Platform: x86_64-pc-linux-gnu (64-bit)
