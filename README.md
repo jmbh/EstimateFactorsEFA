@@ -9,14 +9,12 @@ This repository allows you to reproduce the simulation study, and all results an
 - `submit_jobs.sh` is a batch script that runs a single iteration of `Simulation.R` on the LISA custer of UvA
 - `submit_all.sh` is a batch script that submits `submit_jobs.sh` with seeds `1:200` to the LISA cluster
 
-
-The output of the simulation study is in the folder /output. In principle the simulation can also be run locally, bt running `Simulation.R` sequentially with seeds `1:200`. Each iteration took around 30 minutes, when running parallel on 12 cores. 
-
+The output of the simulation study is in the folder /output. In principle the simulation can also be run locally, bt running `Simulation.R` sequentially with seeds `1:200`. Each iteration took around 30 minutes, when running parallel on 12 cores. Note that five runs failed because of a rare convergence issue of an eigen-decomposition. We worked around this issue by running five extra runs.
 
 ### Results
 - `Evaluation.R` preprocesses the simulation output, computes the numerical results shown in the paper and th results figures 1 and 2
 - `Additional_Analyses.R` contains additional analyses reported in the paper that are not computed from the simulation results
-
+- `mini_Sim_MajorMinor.R` contains code to run the additional simulation study on minor/minor factors in the Appendix
 
 ### Tutorial
 - `Tutorial.R` contains the code of the tutorial in Appendix A and creates the figure in that appendix

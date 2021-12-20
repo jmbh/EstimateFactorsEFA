@@ -1,17 +1,22 @@
 #!/bin/bash
 #SBATCH -N 1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=1
+#SBATCH --threads-per-core=1
 #SBATCH -t 01:00:00
 
-module purge
-module load 2020
-module load R/4.0.2-intel-2020a
+export OMP_NUM_THREADS=1
 
-cp -r "$HOME"/FactorSi4 "$TMPDIR"
-cd "$TMPDIR"/FactorSi4
+module purge
+module load 2021
+module load R/4.1.0-foss-2021a
+
+cp -r "$HOME"/FactorSim5 "$TMPDIR"
+cd "$TMPDIR"/FactorSim5
 
 echo $SLURM_ARRAY_TASK_ID
 
-Rscript --vanilla Simulation12.R $SLURM_ARRAY_TASK_ID
+Rscript --vanilla Simulation.R $SLURM_ARRAY_TASK_ID
 
-cp -r ./*.RDS "$HOME"/FactorSi4
+cp -r ./*.RDS "$HOME"/FactorSim5
 

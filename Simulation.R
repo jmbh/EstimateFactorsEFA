@@ -1,4 +1,4 @@
-# jonashaslbeck@gmail.com; Feb 21, 2021
+# jonashaslbeck@gmail.com; Dec 10, 2021
 
 # --------------------------------------------------------------
 # ---------- Get Iteration Number ------------------------------
@@ -23,7 +23,8 @@ library(fspe)
 library(psych)
 library(GPArotation)
 library(mvtnorm)
-library(corpcor)
+library(corpcor) # used in fspe
+library(GAIPE) # to compute CIs of RMSEA
 
 # Parallel
 library(foreach)
@@ -72,9 +73,9 @@ registerDoParallel(cl)
 timer_total <- proc.time()[3]
 
 out <- foreach(ni = 1:12,
-               .packages = c("psych", "lavaan", "corpcor", "RGenData",
+               .packages = c("psych", "lavaan", "corpcor", "GAIPE",
                              "mvtnorm", "GPArotation", "EGAnet", "fspe"),
-               .export = c("f_datagen2", "f_impcor_fa", "FactorEst", "maxK_global"),
+               .export = c("f_datagen2", "maxK_global"),
                .verbose = TRUE) %dopar% {
 
                  # Reproducibility
@@ -82,7 +83,7 @@ out <- foreach(ni = 1:12,
                  set.seed(the_seed)
 
                  # Storage
-                 a_out <- array(NA, dim=c(4,3,3,10))
+                 a_out <- array(NA, dim=c(4,3,3,18))
 
                  for(nf in 1:4) {
                    for(it in 1:3) {
@@ -160,10 +161,19 @@ out <- foreach(ni = 1:12,
                                            rep = 1,
                                            method = "Cov")
 
+                           # PE + 2fold
+                           k_PE_2 <- fspe(data = data,
+                                           maxK = maxK,
+                                           nfold = 2,
+                                           rep = 1,
+                                           method = "PE")
+
                          } else {
 
                            k_COV_2 <- list()
                            k_COV_2$nfactor <- NA
+                           k_PE_2 <- list()
+                           k_PE_2$nfactor <- NA
 
                          }
 
@@ -205,12 +215,13 @@ out <- foreach(ni = 1:12,
 
                          k_KG <- sum(fa_fits_out2$fa.values > 1)
 
-                         # ------ 7) MAP ------
+                         # ------ 7) MAP [ml] ------
 
                          timer_spec <- proc.time()[3]
                          options(mc.cores = 1) # work around weird psych-package bug
                          fa_fits_out <- vss(x = data,
                                             rotate = "oblimin",
+                                            fm = "ml",  # maximize Gaussian likelihood
                                             n = maxK,
                                             plot = FALSE)
                          timer_spec2 <- round(proc.time()[3] - timer_spec)
@@ -221,19 +232,89 @@ out <- foreach(ni = 1:12,
 
                          k_MAP <- which.min(fa_fits_out$map)
 
-                         # ------ 8) BIC  ------
+                         # ------ 8) BIC [ml] ------
 
                          k_BIC <- which.min(fa_fits_out$vss.stats$BIC)
 
 
-                         # ------ 9) VSS ------
+                         # ------ 9) VSS [ml] ------
 
                          k_VSS <- which.max(fa_fits_out$vss.stats$cfit.1)
 
 
-                         # ------ 10) RMSEA ------
+                         # ------ 10) RMSEA [ml] ------ [updated Nov 30, 2021]
 
-                         k_RMSEA <- which.min(fa_fits_out$vss.stats$RMSEA)
+                         # model with smallest n that is still below 0.05
+                         k_RMSEA <- which(fa_fits_out$vss.stats$RMSEA < .05)[1]
+
+                         # ------ 11) RMSEA with CI [ml] ------ [updated Nov 30, 2021]
+
+                         # Calculate lower CI of RMSEA
+                         v_RMSEA_lower_CI <- rep(NA, maxK)
+                         for(j in 1:maxK) v_RMSEA_lower_CI[j] <- CI.RMSEA(rmsea = fa_fits_out$vss.stats$RMSEA[j],
+                                                                          df = fa_fits_out$vss.stats$dof[j],
+                                                                          N = n,
+                                                                          clevel = 0.95)$Lower.CI
+
+                         # Take smallest K for which the lower CI of RMSEA is below 0.05
+                         k_RMSEA_CI <- which(v_RMSEA_lower_CI < .05)[1]
+
+                         # ------ 12) AIC  [ml] ------
+
+                         AIC_seq <- fa_fits_out$vss.stats$chisq - 2*fa_fits_out$vss.stats$dof
+                         k_AIC <- which.min(AIC_seq)
+
+
+                         # ------ 7-12 AGAIN WITH vvs() with fm = "minres" ------
+
+                         # ------ 13) MAP [minres] ------
+
+                         timer_spec <- proc.time()[3]
+                         options(mc.cores = 1) # work around weird psych-package bug
+                         fa_fits_out_minres <- vss(x = data,
+                                            rotate = "oblimin",
+                                            fm = "minres", # minimize residuals
+                                            n = maxK,
+                                            plot = FALSE)
+                         timer_spec2 <- round(proc.time()[3] - timer_spec)
+
+                         print(paste("iter = ", iter, " ni = ", ni, " nf = ", nf, " it = ", it, " ps = ", ps,
+                                     "psych VVS: time = ", timer_spec2))
+
+
+                         k_MAP_minres <- which.min(fa_fits_out_minres$map)
+
+                         # ------ 14) BIC [minres] ------
+
+                         k_BIC_minres <- which.min(fa_fits_out_minres$vss.stats$BIC)
+
+
+                         # ------ 15) VSS [minres] ------
+
+                         k_VSS_minres <- which.max(fa_fits_out_minres$vss.stats$cfit.1)
+
+
+                         # ------ 16) RMSEA [minres] ------ [updated Nov 30, 2021]
+
+                         # model with smallest n that is still below 0.05
+                         k_RMSEA_minres <- which(fa_fits_out_minres$vss.stats$RMSEA < .05)[1]
+
+                         # ------ 17) RMSEA with CI [minres] ------ [updated Nov 30, 2021]
+
+                         # Calculate lower CI of RMSEA
+                         v_RMSEA_lower_CI <- rep(NA, maxK)
+                         for(j in 1:maxK) v_RMSEA_lower_CI[j] <- CI.RMSEA(rmsea = fa_fits_out_minres$vss.stats$RMSEA[j],
+                                                                          df = fa_fits_out_minres$vss.stats$dof[j],
+                                                                          N = n,
+                                                                          clevel = 0.95)$Lower.CI
+
+                         # Take smallest K for which the lower CI of RMSEA is below 0.05
+                         k_RMSEA_CI_minres <- which(v_RMSEA_lower_CI < .05)[1]
+
+                         # ------ 18) AIC  [minres] ------
+
+                         AIC_seq <- fa_fits_out_minres$vss.stats$chisq - 2*fa_fits_out_minres$vss.stats$dof
+                         k_AIC_minres <- which.min(AIC_seq)
 
 
                          # ------ Save  ------
@@ -241,19 +322,33 @@ out <- foreach(ni = 1:12,
                          a_out[nf, it, ps, 1]  <- k_PE_10$nfactor
                          a_out[nf, it, ps, 2]  <- k_COV_10$nfactor
                          a_out[nf, it, ps, 3]  <- k_COV_2$nfactor
+
                          a_out[nf, it, ps, 4]  <- k_PA
                          a_out[nf, it, ps, 5]  <- k_EGA
                          a_out[nf, it, ps, 6]  <- k_KG
+
                          a_out[nf, it, ps, 7]  <- k_MAP
                          a_out[nf, it, ps, 8]  <- k_BIC
                          a_out[nf, it, ps, 9]  <- k_VSS
                          a_out[nf, it, ps, 10]  <- k_RMSEA
+                         a_out[nf, it, ps, 11]  <- k_RMSEA_CI
+                         a_out[nf, it, ps, 12]  <- k_AIC
+
+                         a_out[nf, it, ps, 13]  <- k_MAP_minres
+                         a_out[nf, it, ps, 14]  <- k_BIC_minres
+                         a_out[nf, it, ps, 15]  <- k_VSS_minres
+                         a_out[nf, it, ps, 16]  <- k_RMSEA_minres
+                         a_out[nf, it, ps, 17]  <- k_RMSEA_CI_minres
+                         a_out[nf, it, ps, 18]  <- k_AIC_minres
+
 
                        } # end if: permitted cells
 
+                       # print(paste0(nf, it, ps))
+
                      } # end for: nf
                    } # end for: it
-                 }# end for: psu
+                 } # end for: psu
 
                  return(a_out)
 
@@ -270,7 +365,7 @@ stopCluster(cl)
 # -----------------------------------------------------
 
 # Combine n-variations
-a_out_all <- array(NA, dim=c(12, 4, 3, 3, 10)) # Storage
+a_out_all <- array(NA, dim=c(12, 4, 3, 3, 18)) # Storage
 for(i in 1:12) a_out_all[i, , , , ] <- out[[i]]
 
 # Output file
