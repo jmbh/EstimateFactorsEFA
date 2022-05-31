@@ -1,4 +1,4 @@
-## Reproducibility Archive for preprint https://psyarxiv.com/qktsd
+## Reproducibility Archive
 
 This repository allows you to reproduce the simulation study, and all results and figures in the preprint "Estimating the Number of Factors in Exploratory Factor Analysis via out-of-sample Prediction Errors" (https://psyarxiv.com/qktsd)
 
@@ -9,12 +9,11 @@ This repository allows you to reproduce the simulation study, and all results an
 - `submit_jobs.sh` is a batch script that runs a single iteration of `Simulation.R` on the LISA custer of UvA
 - `submit_all.sh` is a batch script that submits `submit_jobs.sh` with seeds `1:200` to the LISA cluster
 
-The output of the simulation study is in the folder /output. In principle the simulation can also be run locally, bt running `Simulation.R` sequentially with seeds `1:200`. Each iteration took around 30 minutes, when running parallel on 12 cores. Note that five runs failed because of a rare convergence issue of an eigen-decomposition. We worked around this issue by running five extra runs.
+The output of the simulation study is in the folder /output. In principle the simulation can also be run locally, bt running `Simulation.R` sequentially with seeds `1:200`. Each iteration took around 3h, when running parallel on 12 cores. Note that some runs failed because of a rare convergence issue of an eigen-decomposition. We worked around this issue by adding additional runs.
 
 ### Results
-- `Evaluation.R` preprocesses the simulation output, computes the numerical results shown in the paper and th results figures 1 and 2
+- `Evaluation.R` preprocesses the simulation output, computes the numerical results shown in the paper and the results Figures 1 and 2, and the figures in Appendices H and I
 - `Additional_Analyses.R` contains additional analyses reported in the paper that are not computed from the simulation results
-- `mini_Sim_MajorMinor.R` contains code to run the additional simulation study on minor/minor factors in the Appendix
 
 ### Tutorial
 - `Tutorial.R` contains the code of the tutorial in Appendix A and creates the figure in that appendix
@@ -22,13 +21,12 @@ The output of the simulation study is in the folder /output. In principle the si
 
 ### sessionInfo()
 
-R version 4.0.2 (2020-06-22)
+R version 4.1.0 (2021-05-18)
 Platform: x86_64-pc-linux-gnu (64-bit)
 Running under: Debian GNU/Linux 10 (buster)
 
 Matrix products: default
-BLAS:   /sara/eb/AVX2/Debian10/EB_production/2020/software/R/4.0.2-intel-2020a/lib/R/lib/libR.so
-LAPACK: /sara/eb/AVX2/Debian10/EB_production/2020/software/R/4.0.2-intel-2020a/lib/R/modules/lapack.so
+BLAS/LAPACK: /sara/eb/AVX2/Debian10/EB_production/2021/software/FlexiBLAS/3.0.4-GCC-10.3.0/lib/libflexiblas.so.3.0
 
 locale:
  [1] LC_CTYPE=en_US       LC_NUMERIC=C         LC_TIME=en_US       
@@ -41,15 +39,15 @@ attached base packages:
 [8] base     
 
 other attached packages:
- [1] doParallel_1.0.15     iterators_1.0.12      foreach_1.5.0        
- [4] corpcor_1.6.9         mvtnorm_1.1-0         GPArotation_2014.11-1
- [7] psych_2.0.9           fspe_0.1.0            EGAnet_0.9.8         
-[10] lavaan_0.6-5         
+ [1] doParallel_1.0.16    iterators_1.0.13     foreach_1.5.1       
+ [4] GAIPE_1.0            corpcor_1.6.10       mvtnorm_1.1-1       
+ [7] GPArotation_2022.4-1 psych_2.2.5          fspe_0.1.0          
+[10] EGAnet_1.0.0         lavaan_0.6-8        
 
 loaded via a namespace (and not attached):
-[1] codetools_0.2-16 lattice_0.20-41  grid_4.0.2       nlme_3.1-147    
-[5] stats4_4.0.2     pbivnorm_0.6.0   tools_4.0.2      compiler_4.0.2  
-[9] mnormt_1.5-6    
+ [1] codetools_0.2-18 lattice_0.20-44  grid_4.1.0       nlme_3.1-152    
+ [5] stats4_4.1.0     pbivnorm_0.6.0   tools_4.1.0      compiler_4.1.0  
+ [9] mnormt_2.0.2     tmvnsim_1.0-2   
 
 
 ### Package Version of EGAnet

@@ -1,4 +1,4 @@
-# jonashaslbeck@gmail.com; Dec 10, 2021
+# jonashaslbeck@gmail.com; May 24, 2022
 
 # --------------------------------------------------------------
 # ---------- Get Iteration Number ------------------------------
@@ -83,7 +83,7 @@ out <- foreach(ni = 1:12,
                  set.seed(the_seed)
 
                  # Storage
-                 a_out <- array(NA, dim=c(4,3,3,18))
+                 a_out <- array(NA, dim=c(4, 3, 3, 21)) # 21 methods (May 26th, 2022)
 
                  for(nf in 1:4) {
                    for(it in 1:3) {
@@ -138,14 +138,16 @@ out <- foreach(ni = 1:12,
                                          maxK = maxK,
                                          nfold = 10,
                                          rep = 1,
-                                         method = "PE")
+                                         method = "PE",
+                                         pbar=FALSE)
 
                          # COV + 10fold
                          k_COV_10 <- fspe(data = data,
                                           maxK = maxK,
                                           nfold = 10,
                                           rep = 1,
-                                          method = "Cov")
+                                          method = "Cov",
+                                          pbar=FALSE)
 
                          # COV + 2fold
                          # For 2 fold, for small n, one often gets a not-pos-def matrix
@@ -159,14 +161,16 @@ out <- foreach(ni = 1:12,
                                            maxK = maxK,
                                            nfold = 2,
                                            rep = 1,
-                                           method = "Cov")
+                                           method = "Cov",
+                                           pbar=FALSE)
 
                            # PE + 2fold
                            k_PE_2 <- fspe(data = data,
-                                           maxK = maxK,
-                                           nfold = 2,
-                                           rep = 1,
-                                           method = "PE")
+                                          maxK = maxK,
+                                          nfold = 2,
+                                          rep = 1,
+                                          method = "PE",
+                                          pbar=FALSE)
 
                          } else {
 
@@ -180,7 +184,7 @@ out <- foreach(ni = 1:12,
 
                          timer_spec2 <- round(proc.time()[3] - timer_spec)
                          print(paste("iter = ", iter, " ni = ", ni, " nf = ", nf, " it = ", it, " ps = ", ps,
-                                     "OoS PE: time = ", timer_spec2))
+                                     "OoS PE/CV: time = ", timer_spec2))
 
 
                          # ------ 4) Parallel  ------
@@ -272,10 +276,10 @@ out <- foreach(ni = 1:12,
                          timer_spec <- proc.time()[3]
                          options(mc.cores = 1) # work around weird psych-package bug
                          fa_fits_out_minres <- vss(x = data,
-                                            rotate = "oblimin",
-                                            fm = "minres", # minimize residuals
-                                            n = maxK,
-                                            plot = FALSE)
+                                                   rotate = "oblimin",
+                                                   fm = "minres", # minimize residuals
+                                                   n = maxK,
+                                                   plot = FALSE)
                          timer_spec2 <- round(proc.time()[3] - timer_spec)
 
                          print(paste("iter = ", iter, " ni = ", ni, " nf = ", nf, " it = ", it, " ps = ", ps,
@@ -296,7 +300,7 @@ out <- foreach(ni = 1:12,
 
                          # ------ 16) RMSEA [minres] ------ [updated Nov 30, 2021]
 
-                         # model with smallest n that is still below 0.05
+                         # model with smallest k that is still below 0.05
                          k_RMSEA_minres <- which(fa_fits_out_minres$vss.stats$RMSEA < .05)[1]
 
                          # ------ 17) RMSEA with CI [minres] ------ [updated Nov 30, 2021]
@@ -315,6 +319,36 @@ out <- foreach(ni = 1:12,
 
                          AIC_seq <- fa_fits_out_minres$vss.stats$chisq - 2*fa_fits_out_minres$vss.stats$dof
                          k_AIC_minres <- which.min(AIC_seq)
+
+
+
+                         # ------ 20+21) PE/COV with nfold=10 AND 10 repetitions ------
+
+                         # PE + 10fold
+                         timer_spec <- proc.time()[3]
+                         k_PE_10_10rep <- fspe(data = data,
+                                         maxK = maxK,
+                                         nfold = 10,
+                                         rep = 10,
+                                         method = "PE",
+                                         pbar=FALSE)
+                         timer_spec2 <- proc.time()[3] - timer_spec
+                         print(paste("iter = ", iter, " ni = ", ni, " nf = ", nf, " it = ", it, " ps = ", ps,
+                                     "PE 10 reps: time = ", timer_spec2))
+
+                         # COV + 10fold
+                         timer_spec <- proc.time()[3]
+                         k_COV_10_10rep <- fspe(data = data,
+                                          maxK = maxK,
+                                          nfold = 10,
+                                          rep = 10,
+                                          method = "Cov",
+                                          pbar=FALSE)
+                         timer_spec2 <- proc.time()[3] - timer_spec
+                         print(paste("iter = ", iter, " ni = ", ni, " nf = ", nf, " it = ", it, " ps = ", ps,
+                                     "CovE 10 reps: time = ", timer_spec2))
+
+
 
 
                          # ------ Save  ------
@@ -341,6 +375,11 @@ out <- foreach(ni = 1:12,
                          a_out[nf, it, ps, 17]  <- k_RMSEA_CI_minres
                          a_out[nf, it, ps, 18]  <- k_AIC_minres
 
+                         a_out[nf, it, ps, 19]  <- k_PE_2$nfactor
+
+                         a_out[nf, it, ps, 20]  <- k_PE_10_10rep$nfactor
+                         a_out[nf, it, ps, 21]  <- k_COV_10_10rep$nfactor
+
 
                        } # end if: permitted cells
 
@@ -365,11 +404,11 @@ stopCluster(cl)
 # -----------------------------------------------------
 
 # Combine n-variations
-a_out_all <- array(NA, dim=c(12, 4, 3, 3, 18)) # Storage
-for(i in 1:12) a_out_all[i, , , , ] <- out[[i]]
+a_out_all <- array(NA, dim=c(12, 4, 3, 3, 21)) # Storage
+for(i in 1:12) a_out_all[i, , , , ] <- out[[i]] # loop in n-variation
 
 # Output file
-saveRDS(a_out_all, file = paste0("Simres_Iter_lowFL3_", iter, ".RDS"))
+saveRDS(a_out_all, file = paste0("Simres_Iter_FS6_", iter, ".RDS"))
 
 
 

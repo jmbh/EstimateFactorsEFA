@@ -1,7 +1,18 @@
-# jonashaslbeck@gmail.com; Feb 21, 2021
+# jonashaslbeck@gmail.com; May 30, 2022
 
+# Data generation
 library(lavaan)
 source("aux_functions.R")
+library(MASS)
+
+# Estimation
+library(fspe)
+library(psych)
+library(EGAnet)
+
+# Visualization
+library(RColorBrewer)
+
 
 # --------------------------------------------------------------
 # ---------- Get Average correlation in 1-Factor model ---------
@@ -32,7 +43,6 @@ round(mean(corm), 2)
 round(sd(corm), 2)
 
 
-
 # --------------------------------------------------------------
 # ---------- Appendix B: CV folds ------------------------------
 # --------------------------------------------------------------
@@ -45,40 +55,79 @@ round(sd(corm), 2)
 
 # We compare fold sizes of 5, 10, 20, 50 and run 100 repetitions of the design
 
-nIter <- 100
-m_perf <- matrix(NA, nIter, 4)
-v_folds <- c(5, 10, 20, 50)
+# Settings
+nIter <- 1000
+v_folds <- c(2, 5, 10, 20)
+n_v_folds <- length(v_folds)
 
+# Storage
+a_perf <- array(NA, dim=c(nIter, 4, 2))
+
+# Reproducibility
 set.seed(1)
 
+# Loop through
 for(i in 1:nIter) {
 
   dg_out <- f_datagen2(nfactor = 4,
                        items_pf = 3,
-                       psi = .4,
-                       n = 500)
+                       psi = 0.4,
+                       n = 593)
   data <- dg_out$data
 
-  for(fold in 1:4) {
+  for(fold in 1:n_v_folds) {
 
-    # Estimate number of factors
-    out <- FactorEst(data = data,
-                     maxK = 7,
-                     nfold = v_folds[fold])
+    # PE method
+    out <- fspe(data = data,
+                maxK = 7,
+                nfold = v_folds[fold],
+                method = "PE",
+                pbar=FALSE)
+    a_perf[i, fold, 1] <- out$nfactor
 
-    # Correct?
-    m_perf[i, fold] <- out$nfactor == 4
+    # PE method
+    out <- fspe(data = data,
+                maxK = 7,
+                nfold = v_folds[fold],
+                method = "Cov",
+                pbar=FALSE)
+    a_perf[i, fold, 2] <- out$nfactor
 
-  }
+  } # end: folds
+
   print(i)
 
-} # end iter
+} # end: iter
 
-colMeans(m_perf)
+
+# Save
+saveRDS(a_perf, file="files/FoldSim_1000iter.RDS")
+# a_perf <- readRDS(file="files/FoldSim_1000iter.RDS")
+
+# Accuracy
+acc <- apply(a_perf==4, 2:3, mean)
+
+# ----- Make Figure -----
+
+# Same colors as Figure 2/3 in main text
+cols <- brewer.pal(5, "Set1")[c(1,4)]
+
+pdf("figures/Fig_FoldSim.pdf", width = 5, height = 4)
+par(mar=c(4,4,3,1))
+plot(acc[,1], ylim=c(.4,.75), type="l", axes=F, xlab="", ylab="", col=cols[1], lwd=2, lty=2)
+points(acc[,1], col=cols[1], lwd=2, pch=20, cex=1.5)
+points(acc[,2], col=cols[2], lwd=2, pch=20, cex=1.5)
+lines(acc[,2], col=cols[2], lwd=2, lty=2)
+axis(1, labels=v_folds, at=1:4)
+axis(2, las=2)
+title(ylab="Mean Accuracy")
+title(xlab="Folds in Cross Validation")
+legend("bottomright", legend=c("PE", "CovE"), lwd=c(2,2), col=cols, bty="n")
+dev.off()
 
 
 # --------------------------------------------------------------
-# ---------- Appendix B: CV repetitions ------------------------
+# ---------- Appendix C: CV scheme repetitions -----------------
 # --------------------------------------------------------------
 
 # Question: can we bump up the performance by running CVs several
@@ -86,40 +135,61 @@ colMeans(m_perf)
 
 nIter <- 100
 m_reps <- matrix(NA, nIter, 11)
-set.seed(1)
+set.seed(2)
+
+# With this model: factor model with max 7 factors is identified
 
 for(i in 1:nIter) {
-
 
   # Generate Data
   dg_out <- f_datagen2(nfactor = 4,
                        items_pf = 3,
                        psi = .4,
-                       n = 500)
+                       n = 593)
 
   # OoS PE scheme
-  out <- FactorEst(data = dg_out$data,
-                   maxK = 6,
-                   nfold = 10,
-                   rep = 10,
-                   method="PE")
+  time <- proc.time()[3]
+  out <- fspe(data = dg_out$data,
+              maxK = 6,
+              nfold = 10,
+              rep = 10,
+              method = "PE",
+              pbar = FALSE)
+  print(proc.time()[3] - time)
 
   # Save performances
   for(r in 1:10) {
-    v_PEs <- apply(out$PEs[, , , r], 1, mean)
+    v_PEs <- apply(out$PE_array[, , , r], 1, mean)
     m_reps[i, r] <- which.min(v_PEs)
   }
 
-  m_reps[i, 11] <- out$nfactor
+  m_reps[i, 11] <- out$nfactor # based on majority rule
 
   print(i)
 } # end iter
 
+# saveRDS(m_reps, file="files/m_reps_seed2.RDS")
+m_reps <- readRDS(file="files/m_reps_seed1.RDS")
+
 # Accuracy improvement
 m_acc <- m_reps == 4
 v_acc <- colMeans(m_acc)
-mean(v_acc[1:10])
-v_acc[11]
+mean(v_acc[1:10]) # mean accuracy of individual runs
+v_acc[11] # accuracy of majority rule
+
+v_acc[11] / mean(v_acc[1:10])
+
+
+# Checking free parameters
+
+# ----- get cell specs ------
+nfactor <- 4
+items_pf <- 3
+psi <- 0.4
+n <- v_n[6]
+
+# number of variables
+p <- items_pf * nfactor
 
 # Correlation between re-runs
 corm <- cor(m_reps[, 1:10])
@@ -130,15 +200,9 @@ mean(corm[lower.tri(corm)])
 # --------------------------------------------------------------
 # ---------- Figures in Appendix D (Parallel Analysis) ---------
 # --------------------------------------------------------------
-
-# Adapted from rietvanbork@hotmail.com
+# Code Adapted from rietvanbork@hotmail.com
 
 set.seed(7)
-
-library(lavaan)
-library(psych)
-source("aux_functions.R")
-library(MASS)
 
 # ---------- Figure 4 ---------------------------------------
 
@@ -322,11 +386,6 @@ for(i in 1:3) {
 # We pick a condition in which all methods are making some mistakes
 # to get a good differentiation
 
-# Load Packages
-library(fspe)
-library(EGAnet)
-library(lavaan)
-library(psych)
 
 nIter <- 200
 v_cats <- 2:10
@@ -356,13 +415,13 @@ for(i in 1:nIter) {
     data <- dg_out$data
 
     ## Estimate
-
     # PE
     k_PE_10 <- fspe(data = data,
                     maxK = 6,
                     nfold = 10,
-                    rep = 1,
-                    method = "PE")
+                    rep = 10,
+                    method = "PE",
+                    pbar = FALSE)
 
     a_res[i, j, 1] <- k_PE_10$nfactor
 
@@ -385,13 +444,18 @@ for(i in 1:nIter) {
   print(i)
 }
 
+# saveRDS(a_res, file="files/PolytomousSim.RDS")
 
-# -------- Make Figure paper ----------
+# Compute accuracy
+a_acc <- a_res==4
+m_acc <- apply(a_acc, 2:3, mean)
+
+# -------- Make Figure for appendix ----------
 
 sc <- 0.8
 pdf("figures/App_Polytomous.pdf", width=7*sc, height=6*sc)
 
-library(RColorBrewer)
+# Colors
 cols <- brewer.pal(5, "Set1")
 
 # Polytomous
@@ -399,12 +463,12 @@ plot.new()
 plot.window(xlim=c(2, 11), ylim=c(0,1))
 axis(1, labels=c(2:10, "Cont."), at=2:11, las=1)
 axis(2, las=2)
-lines(2:10, out[-10, 1], col=cols[1], lty=1, lwd=2)
-lines(2:10, out[-10, 3], col=cols[2], lty=2, lwd=2)
-lines(2:10, out[-10, 2], col=cols[3], lty=3, lwd=2)
-points(2:11, out[, 1], col=cols[1], pch=20, lwd=2)
-points(2:11, out[, 3], col=cols[2], pch=20, lwd=2)
-points(2:11, out[, 2], col=cols[3], pch=20, lwd=2)
+lines(2:10, m_acc[-10, 1], col=cols[1], lty=1, lwd=2)
+lines(2:10, m_acc[-10, 3], col=cols[2], lty=2, lwd=2)
+lines(2:10, m_acc[-10, 2], col=cols[3], lty=3, lwd=2)
+points(2:11, m_acc[, 1], col=cols[1], pch=20, lwd=2)
+points(2:11, m_acc[, 3], col=cols[2], pch=20, lwd=2)
+points(2:11, m_acc[, 2], col=cols[3], pch=20, lwd=2)
 
 legend("bottomright", legend = c("PE", "Parallel", "EGA"),
        col=cols, lty=1:3, bty="n", lwd=rep(3,1))
@@ -413,3 +477,95 @@ title(xlab=c("Response categories"), line=2.5)
 title(ylab=c("Accuracy"), line=2.5)
 
 dev.off()
+
+
+
+# --------------------------------------------------------------
+# ---------- Assess Bias-Variance Trade-off [for reply letter] -
+# --------------------------------------------------------------
+
+# ----- True: 6-factor with varying psi -----
+
+# Storage
+nIter <- 25
+n_seq <- seq(100, 1000, length=7)
+n_n_seq <- length(n_seq)
+psi_seq <- c(0, .8)
+a_res <- array(NA, dim=c(nIter, n_n_seq, 2, 6))
+
+# Loop
+set.seed(1)
+for(i in 1:nIter){
+  print(i)
+  for(psi in 1:2) {
+    for(n in 1:n_n_seq) {
+
+      print(paste0("i = ", i, "; psi = ", psi, "; n = ", n))
+
+      # Generate Data
+      dg_out <- f_datagen2(nfactor = 6,
+                           items_pf = 6,
+                           psi = psi_seq[psi],
+                           n = n_seq[n],
+                           ra = c(0.3, 1),
+                           cats = NULL)
+
+      # Fit factor models
+      out <- fspe(dg_out$data, maxK = 6, pbar = FALSE)
+
+      a_res[i, n, psi, ] <- out$PEs
+    }
+  }
+}
+
+saveRDS(a_res, "files/BiasVar_Sim.RDS")
+
+
+# Aggregate
+m_res <- apply(a_res, 2:4, mean)
+
+m_ylim <- rbind(c(.8, 1), c(.76, .82))
+
+# Plot Figure
+cols <- brewer.pal(7, "Set1")[-6]
+
+sc <- 1.1
+pdf("figures/Fig_BiasVariance.pdf", width = 8*sc, height = 4.5*sc)
+
+par(mfrow=c(1,2))
+for(psi in 1:2) {
+
+  # layout
+  plot.new()
+  plot.window(xlim=c(1,n_n_seq), ylim=m_ylim[psi, ])
+  axis(1, labels=n_seq, at=1:n_n_seq, cex.axis=.9)
+  axis(2, las=2)
+  title(main=paste0("Psi = ", psi_seq[psi]), font.main=1, line=1.5)
+  title(xlab="N")
+  title(ylab="Prediction Error")
+
+  # data
+  for(i in 1:6) lines(m_res[, psi, i], col=cols[i])
+
+  # legend
+  if(psi==2) legend("topright", legend=paste0(1:6, " Factor"),
+                    col=cols, lwd = rep(1,6), bty="n")
+
+}
+
+dev.off()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

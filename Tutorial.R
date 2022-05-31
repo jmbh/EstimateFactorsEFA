@@ -1,4 +1,4 @@
-# jonashaslbeck@gmail.com; February 18, 2020
+# jonashaslbeck@gmail.com; May 26, 2022
 
 # -----------------------------------------------------
 # -------- Tutorial -----------------------------------
@@ -14,7 +14,7 @@ set.seed(1)
 fspe_out <- fspe(data = holzinger19,
                  maxK = 10,
                  nfold = 10,
-                 rep = 1,
+                 rep = 10,
                  method = "PE")
 
 fspe_out$nfactor # estimated factors = 4
@@ -31,7 +31,8 @@ plot.new()
 plot.window(xlim=c(1, 10), ylim=c(.6, .8))
 axis(1, 1:10)
 axis(2, las=2)
-lines(fspe_out$PEs)
+abline(h=min(fspe_out$PEs), col="grey")
+lines(fspe_out$PEs, lty=2)
 points(fspe_out$PEs, pch=20, cex=1.5)
 title(xlab="Number of Factors", ylab="Prediction Error")
 dev.off()

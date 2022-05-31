@@ -1,9 +1,9 @@
 #!/bin/bash
 
-mkdir "$TMPDIR"/FactorSim5/
+mkdir "$TMPDIR"/FactorSim/
 
-cd "$HOME"/FactorSim5
+cd "$HOME"/FactorSim
 
-sbatch -a 1-220 submit_jobs.sh
+sbatch -a 1-240 submit_jobs.sh
 
 

@@ -365,9 +365,9 @@ summary {
 </div>
 
 
-<div id="reproducibility-archive-for-preprint-xxx" class="section level2">
-<h2>Reproducibility Archive for preprint XXX</h2>
-<p>This repository allows you to reproduce the simulation study, and all results and figures in the preprint “Estimating the Number of Factors in Exploratory Factor Analysis via out-of-sample Prediction Errors”.</p>
+<div id="reproducibility-archive" class="section level2">
+<h2>Reproducibility Archive</h2>
+<p>This repository allows you to reproduce the simulation study, and all results and figures in the preprint “Estimating the Number of Factors in Exploratory Factor Analysis via out-of-sample Prediction Errors” (<a href="https://psyarxiv.com/qktsd" class="uri">https://psyarxiv.com/qktsd</a>)</p>
 <div id="simulation-study" class="section level3">
 <h3>Simulation study</h3>
 <ul>
@@ -376,12 +376,12 @@ summary {
 <li><code>submit_jobs.sh</code> is a batch script that runs a single iteration of <code>Simulation.R</code> on the LISA custer of UvA</li>
 <li><code>submit_all.sh</code> is a batch script that submits <code>submit_jobs.sh</code> with seeds <code>1:200</code> to the LISA cluster</li>
 </ul>
-<p>The output of the simulation study is in the folder /output. In principle the simulation can also be run locally, bt running <code>Simulation.R</code> sequentially with seeds <code>1:200</code>. Each iteration took around 30 minutes, when running parallel on 12 cores.</p>
+<p>The output of the simulation study is in the folder /output. In principle the simulation can also be run locally, bt running <code>Simulation.R</code> sequentially with seeds <code>1:200</code>. Each iteration took around 3h, when running parallel on 12 cores. Note that some runs failed because of a rare convergence issue of an eigen-decomposition. We worked around this issue by adding additional runs.</p>
 </div>
 <div id="results" class="section level3">
 <h3>Results</h3>
 <ul>
-<li><code>Evaluation.R</code> preprocesses the simulation output, computes the numerical results shown in the paper and th results figures 1 and 2</li>
+<li><code>Evaluation.R</code> preprocesses the simulation output, computes the numerical results shown in the paper and the results Figures 1 and 2, and the figures in Appendices H and I</li>
 <li><code>Additional_Analyses.R</code> contains additional analyses reported in the paper that are not computed from the simulation results</li>
 </ul>
 </div>
@@ -391,23 +391,28 @@ summary {
 <li><code>Tutorial.R</code> contains the code of the tutorial in Appendix A and creates the figure in that appendix</li>
 </ul>
 </div>
-</div>
-<div id="sessioninfo" class="section level2">
-<h2>sessionInfo()</h2>
-<p>R version 4.0.2 (2020-06-22) Platform: x86_64-pc-linux-gnu (64-bit) Running under: Debian GNU/Linux 10 (buster)</p>
-<p>Matrix products: default BLAS: /sara/eb/AVX2/Debian10/EB_production/2020/software/R/4.0.2-intel-2020a/lib/R/lib/libR.so LAPACK: /sara/eb/AVX2/Debian10/EB_production/2020/software/R/4.0.2-intel-2020a/lib/R/modules/lapack.so</p>
+<div id="sessioninfo" class="section level3">
+<h3>sessionInfo()</h3>
+<p>R version 4.1.0 (2021-05-18) Platform: x86_64-pc-linux-gnu (64-bit) Running under: Debian GNU/Linux 10 (buster)</p>
+<p>Matrix products: default BLAS/LAPACK: /sara/eb/AVX2/Debian10/EB_production/2021/software/FlexiBLAS/3.0.4-GCC-10.3.0/lib/libflexiblas.so.3.0</p>
 <p>locale: [1] LC_CTYPE=en_US LC_NUMERIC=C LC_TIME=en_US<br />
 [4] LC_COLLATE=en_US LC_MONETARY=en_US LC_MESSAGES=en_US<br />
 [7] LC_PAPER=en_US LC_NAME=C LC_ADDRESS=C<br />
 [10] LC_TELEPHONE=C LC_MEASUREMENT=en_US LC_IDENTIFICATION=C</p>
 <p>attached base packages: [1] parallel stats graphics grDevices utils datasets methods<br />
 [8] base</p>
-<p>other attached packages: [1] doParallel_1.0.15 iterators_1.0.12 foreach_1.5.0<br />
-[4] corpcor_1.6.9 mvtnorm_1.1-0 GPArotation_2014.11-1 [7] psych_2.0.9 fspe_0.1.0 EGAnet_0.9.8<br />
-[10] lavaan_0.6-5</p>
-<p>loaded via a namespace (and not attached): [1] codetools_0.2-16 lattice_0.20-41 grid_4.0.2 nlme_3.1-147<br />
-[5] stats4_4.0.2 pbivnorm_0.6.0 tools_4.0.2 compiler_4.0.2<br />
-[9] mnormt_1.5-6</p>
+<p>other attached packages: [1] doParallel_1.0.16 iterators_1.0.13 foreach_1.5.1<br />
+[4] GAIPE_1.0 corpcor_1.6.10 mvtnorm_1.1-1<br />
+[7] GPArotation_2022.4-1 psych_2.2.5 fspe_0.1.0<br />
+[10] EGAnet_1.0.0 lavaan_0.6-8</p>
+<p>loaded via a namespace (and not attached): [1] codetools_0.2-18 lattice_0.20-44 grid_4.1.0 nlme_3.1-152<br />
+[5] stats4_4.1.0 pbivnorm_0.6.0 tools_4.1.0 compiler_4.1.0<br />
+[9] mnormt_2.0.2 tmvnsim_1.0-2</p>
+</div>
+<div id="package-version-of-eganet" class="section level3">
+<h3>Package Version of EGAnet</h3>
+<p>We followed the author’s advice and used the latest version of their package from Github. We added the source of that version in this reproducibility archive (EGAnet.zip)</p>
+</div>
 </div>
 
 
