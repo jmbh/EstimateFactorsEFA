@@ -1,4 +1,4 @@
-# jonashaslbeck@gmail.com; May 30, 2022
+# jonashaslbeck@gmail.com; Sept 06, 2022
 
 # Data generation
 library(lavaan)
@@ -101,8 +101,8 @@ for(i in 1:nIter) {
 
 
 # Save
-saveRDS(a_perf, file="files/FoldSim_1000iter.RDS")
-# a_perf <- readRDS(file="files/FoldSim_1000iter.RDS")
+# saveRDS(a_perf, file="files/FoldSim_1000iter.RDS")
+a_perf <- readRDS(file="files/FoldSim_1000iter.RDS")
 
 # Accuracy
 acc <- apply(a_perf==4, 2:3, mean)
@@ -114,7 +114,7 @@ cols <- brewer.pal(5, "Set1")[c(1,4)]
 
 pdf("figures/Fig_FoldSim.pdf", width = 5, height = 4)
 par(mar=c(4,4,3,1))
-plot(acc[,1], ylim=c(.4,.75), type="l", axes=F, xlab="", ylab="", col=cols[1], lwd=2, lty=2)
+plot(acc[,1], ylim=c(.4,.75), type="l", axes=F, xlab="", ylab="", col=cols[1], lwd=2, lty=1)
 points(acc[,1], col=cols[1], lwd=2, pch=20, cex=1.5)
 points(acc[,2], col=cols[2], lwd=2, pch=20, cex=1.5)
 lines(acc[,2], col=cols[2], lwd=2, lty=2)
@@ -122,7 +122,7 @@ axis(1, labels=v_folds, at=1:4)
 axis(2, las=2)
 title(ylab="Mean Accuracy")
 title(xlab="Folds in Cross Validation")
-legend("bottomright", legend=c("PE", "CovE"), lwd=c(2,2), col=cols, bty="n")
+legend("bottomright", legend=c("PE", "CovE"), lwd=c(2,2), lty=1:2, col=cols, bty="n")
 dev.off()
 
 
