@@ -217,7 +217,7 @@ fa_fits_out2 <- fa.parallel(x = dg_out$data,
                             n.iter = 20,
                             fa = "fa",
                             fm = "minres",
-                            plot = T,
+                            plot = FALSE,
                             quant = 0.95)
 
 sim_factor <- fa_fits_out2$values[ ,(p+1):(p+1+p-1)]
@@ -226,15 +226,19 @@ means <- apply(sim_factor, 2, function(x) mean(x))
 
 
 pdf("figures/APP_paralleltest_4factors.pdf",width=6,height=5)
-plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red", cex.lab=1.2, lwd=2, ylab="eigen values",las=1,lty=2, ylim=c(0, 2),xlab="eigen value number ordered by absolute value", bty="n",main="Parallel test: 4 factors")
-lines(fa_fits_out2$fa.values, type="b", lwd=2)
-lines(means, col="red", lwd=2)
+plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red", cex.lab=1.2,
+    lwd=2, ylab="eigen values",las=1,
+    lty=2, ylim=c(0, 2),
+    xlab="Eigen value number ordered by absolute value", bty="n",
+    main="Parallel test: 4 factors")
+lines(fa_fits_out2$fa.values, type="l", lwd=2)
+lines(means, col="red", lwd=2, lty=3)
 axis(side=1, at=seq(1,12),cex.axis = 1.2)
 legend(8,2,
        legend = c("Actual data", "Mean", "95 quantile"),
        col = c("black", "red","red"),
        bty = "n",
-       lty = c(1,1,2),
+       lty = c(1,3,2),
        pt.cex = 1,
        cex = 1.2,
        lwd = 2,
@@ -290,15 +294,17 @@ for(i in 1:3) {
 
   pdf(paste0("figures/2factors_cor5_n",v_n[i],".pdf"),width=4.5,height=5)
 
-  plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red", cex.lab=1.2, lwd=2, ylab="eigen values",las=1,lty=2, ylim=c(0, 2),xlab="eigen value number", bty="n",main=" ")
-  lines(fa_fits_out2$fa.values, type="b", lwd=2)
-  lines(means, col="red", lwd=2)
+  plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red", cex.lab=1.2, lwd=2,
+       ylab="Eigen values",las=1,lty=2, ylim=c(0, 2),
+       xlab="Eigen value number", bty="n",main=" ")
+  lines(fa_fits_out2$fa.values, type="l", lwd=2)
+  lines(means, col="red", lwd=2, lty=3)
   axis(side=1, at=seq(1,12),cex.axis = 1.2)
   if(i==3) legend(3,2,
                   legend = c("Actual data", "Mean", "95 quantile"),
                   col = c("black", "red","red"),
                   bty = "n",
-                  lty = c(1,1,2),
+                  lty = c(1,3,2),
                   pt.cex = 1,
                   cex = 1.2,
                   lwd = 2,
