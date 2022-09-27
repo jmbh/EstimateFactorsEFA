@@ -1,4 +1,4 @@
-# jonashaslbeck@gmail.com; Sept 06, 2022
+# jonashaslbeck@gmail.com; Sept 27, 2022
 
 # Data generation
 library(lavaan)
@@ -248,7 +248,7 @@ dev.off()
 
 # ---------- Figure 5 ---------------------------------------
 
-
+set.seed(1)
 v_n <- c(10000, 50000, 100000)
 
 for(i in 1:3) {
@@ -268,8 +268,9 @@ for(i in 1:3) {
   sig[6,4]<-corr
   sig[6,5]<-corr
   sig[5,6]<-corr
-  sig
-  p<-6
+  # sig
+  p <- 6
+
   data <- mvrnorm(n = v_n[i],
                   mu=rep(0,6),
                   Sigma=sig,
@@ -295,7 +296,7 @@ for(i in 1:3) {
   pdf(paste0("figures/2factors_cor5_n",v_n[i],".pdf"),width=4.5,height=5)
 
   plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red", cex.lab=1.2, lwd=2,
-       ylab="Eigen values",las=1,lty=2, ylim=c(0, 2),
+       ylab="Eigen values (Factor Analysis)",las=1,lty=2, ylim=c(0, 2),
        xlab="Eigen value number", bty="n",main=" ")
   lines(fa_fits_out2$fa.values, type="l", lwd=2)
   lines(means, col="red", lwd=2, lty=3)
@@ -338,6 +339,10 @@ for(i in 1:3) {
   sig[5,6]<-corr
   sig
   p<-6
+
+
+  set.seed(1)
+
   data <- mvrnorm(n = 1000,
                   mu=rep(0,6),
                   Sigma=sig,
@@ -362,15 +367,19 @@ for(i in 1:3) {
 
   pdf(paste0("figures/2factors_cor",v_cor[i],"_n1000.pdf"),width=4.5,height=5)
 
-  plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red", cex.lab=1.2, lwd=2, ylab="eigen values",las=1,lty=2, ylim=c(0, 2),xlab="eigen value number", bty="n",main=" ")
+  plot(qntls, xaxt="n",type="l",cex.axis = 1.2, col="red",
+       cex.lab=1.2, lwd=2, ylab="Eigen values (Factor Analysis)",
+       las=1,lty=2, ylim=c(0, 2),
+       xlab="Eigen value number", bty="n",main=" ")
+
   lines(fa_fits_out2$fa.values, type="b", lwd=2)
-  lines(means, col="red", lwd=2)
+  lines(means, col="red", lwd=2, lty=3)
   axis(side=1, at=seq(1,12),cex.axis = 1.2)
   if(i==3) legend(3,2,
                   legend = c("Actual data", "Mean", "95 quantile"),
                   col = c("black", "red","red"),
                   bty = "n",
-                  lty = c(1,1,2),
+                  lty = c(1,3,2),
                   pt.cex = 1,
                   cex = 1.2,
                   lwd = 2,
